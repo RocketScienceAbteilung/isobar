@@ -7,6 +7,7 @@ import thread
 import traceback
 from isobar import *
 from isobar.pattern import *
+import functools
 
 import isobar.io
 
@@ -189,6 +190,29 @@ class Timeline(object):
     def add_output(self, device):
         self.devices.append(device)
 
+    def sched_mod(self, ch_idx, event, delay=0, quantize=16, device=None):
+        '''
+        update channel events in realtime
+        '''
+
+        def swap_events(ch_idx, event):
+            for key, value in event.items():
+                self.channels[ch_idx].events[key] = Pattern.pattern(value)
+            if device:
+                self.channels[ch_idx].device = device
+
+        swap = functools.partial(swap_events, ch_idx, event)
+
+        if quantize or delay:
+            if quantize:
+                schedtime = self.beats + \
+                    quantize - (self.beats % quantize) + delay
+            else:
+                schedtime = self.beats + delay
+            self.events.append({'time': schedtime, 'fn': swap})
+        else:
+            swap()
+
     def sched(self, event, quantize=0, delay=0, count=0, device=None):
         if not device:
             if not self.devices:
@@ -215,8 +239,11 @@ class Timeline(object):
 
         if quantize or delay:
             if quantize:
-                schedtime = quantize * \
-                    math.ceil(float(self.beats + delay) / quantize)
+                schedtime = self.beats + quantize - (self.beats % quantize) + delay
+                print schedtime
+                print self.beats
+                print delay
+                print quantize
             else:
                 schedtime = self.beats + delay
             self.events.append({'time': schedtime, 'fn': addchan})
@@ -471,19 +498,19 @@ class Channel:
             return
 
         # noteOn: Standard (MIDI) type of device
-        if values["amp"] > 0:
-            # TODO: pythonic duck-typing approach might be better
-            # TODO: doesn't handle arrays of amp, channel values, etc
-            notes = values["note"] if hasattr(
-                values["note"],
-                '__iter__') else [
-                values["note"]]
+        # TODO: pythonic duck-typing approach might be better
+        # TODO: doesn't handle arrays of amp, channel values, etc
+        notes = values["note"] if hasattr(
+            values["note"],
+            '__iter__') else [
+            values["note"]]
 
-            # Allow for arrays of amp, gate etc, to handle chords properly.
-            # Caveat: Things will go horribly wrong for an array of amp/gate
-            # values shorter than the number of notes.
+        # Allow for arrays of amp, gate etc, to handle chords properly.
+        # Caveat: Things will go horribly wrong for an array of amp/gate
+        # values shorter than the number of notes.
 
-            for index, note in enumerate(notes):
+        for index, note in enumerate(notes):
+            if values["amp"] > 0:
                 amp = values["amp"][index] if isinstance(
                     values["amp"],
                     list) else values["amp"]
