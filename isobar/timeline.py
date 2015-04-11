@@ -14,9 +14,9 @@ class Timeline(object):
     CLOCK_INTERNAL = 0
     CLOCK_EXTERNAL = 1
 
-    def __init__(self, bpm=120, device=None, debug=None, ticks_per_beat=24):
-        """expect to receive one tick per beat, generate events at 120bpm"""
-        self.ticklen = 1.0 / ticks_per_beat
+    def __init__(self, bpm=120, device=None, debug=None, ticks_per_beat=96):
+        """expect to receive four tick per beat, generate events at 120bpm"""
+        self.ticklen = 4.0 / ticks_per_beat
         self.beats = 0
         self.devices = [device] if device else []
         self.channels = []
