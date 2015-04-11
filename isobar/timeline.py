@@ -1,3 +1,4 @@
+from __future__ import division
 import sys
 import time
 import math
@@ -14,9 +15,22 @@ class Timeline(object):
     CLOCK_INTERNAL = 0
     CLOCK_EXTERNAL = 1
 
-    def __init__(self, bpm=120, device=None, debug=None, ticks_per_beat=96):
-        """expect to receive four tick per beat, generate events at 120bpm"""
-        self.ticklen = 4.0 / ticks_per_beat
+    def __init__(
+        self,
+        bpm=120,
+        device=None,
+        debug=None,
+        division=4,
+        ticks_per_beat=96
+    ):
+        """
+        expect to receive four tick per beat, generate events at 120bpm
+        devision sets the grid: 1 = quarter notes
+                                2 = eights notes
+                                4 = 16th notes etc...
+        """
+        self.ticks_per_beat = ticks_per_beat
+        self.ticklen = division / ticks_per_beat
         self.beats = 0
         self.devices = [device] if device else []
         self.channels = []
@@ -42,7 +56,7 @@ class Timeline(object):
         else:
             self.bpm = bpm
             '''
-            # Create clock with a tick-size of 1/24th of a beat.
+            # Create clock with a tick-size of 1/ticks_per_beat of a beat.
             '''
             self.clock = Clock(60.0 / (self.bpm * ticks_per_beat))
             self.clockmode = self.CLOCK_INTERNAL
@@ -59,24 +73,25 @@ class Timeline(object):
         '''
         for event in self.events[:]:
             '''
-            # the only event we currently get in a Timeline are add_channel events
-            #  -- which have a raw function associated with them.
-            #
-            # round needed because we can sometimes end up with beats = 3.99999999...
-            # http://docs.python.org/tutorial/floatingpoint.html
+            the only event we currently get in a Timeline are add_channel
+            events -- which have a raw function associated with them.
+
+            round needed because we can sometimes end up with
+            beats = 3.99999999...
+            http://docs.python.org/tutorial/floatingpoint.html
             '''
             if round(event["time"], 8) <= round(self.beats, 8):
                 event["fn"]()
                 self.events.remove(event)
 
         '''
-        # some devices (ie, MidiFileOut) require being told to tick
+        some devices (ie, MidiFileOut) require being told to tick
         '''
         for device in self.devices:
             device.tick(self.ticklen)
 
         '''
-        # copy self.channels because removing from it whilst using it = bad idea
+        copy self.channels because removing from it whilst using it = bad idea
         '''
         for channel in self.channels[:]:
             channel.tick(self.ticklen)
@@ -87,8 +102,8 @@ class Timeline(object):
             raise StopIteration
 
         '''
-        # TODO: should automator and channel inherit from a common superclass?
-        #       one is continuous, one is discrete.
+        TODO: should automator and channel inherit from a common superclass?
+               one is continuous, one is discrete.
         '''
         for automator in self.automators[:]:
             automator.tick(self.ticklen)
@@ -100,7 +115,10 @@ class Timeline(object):
     def dump(self):
         """ Output a summary of this Timeline object
             """
-        print "Timeline (clock: %s)" % ("external" if self.clockmode == self.CLOCK_EXTERNAL else "%sbpm" % self.bpm)
+        print "Timeline (clock: %s)" % (
+            "external" if self.clockmode == self.CLOCK_EXTERNAL
+            else "%sbpm" % self.bpm
+        )
 
         print " - %d devices" % len(self.devices)
         for device in self.devices:
@@ -185,10 +203,8 @@ class Timeline(object):
         # c = channel(copy.deepcopy(dict))
         # c = Channel(copy.copy(dict))
         def addchan():
-            #------------------------------------------------------------------
             # this isn't exactly the best way to determine whether a device is
             # an automator or event generator. should we have separate calls?
-            #------------------------------------------------------------------
             if isinstance(event, dict) and "control" in event and False:
                 pass
             else:
@@ -228,12 +244,11 @@ class AutomatorChannel:
 class Channel:
 
     def __init__(self, events={}, count=0):
-        #----------------------------------------------------------------------
-        # evaluate in case we have a pattern which gives us an event
-        # eg: PSeq([ { "note" : 20, "dur" : 0.5 }, { "note" : 50, "dur" : PWhite(0, 2) } ])
-        #
-        # is this ever even necessary?
-        #----------------------------------------------------------------------
+        '''
+        evaluate in case we have a pattern which gives us an event
+        eg: PSeq([ { "note" : 20, "dur" : 0.5 }, { "note" : 50, "dur" : PWhite(0, 2) } ])
+        is this ever even necessary?
+        '''
         # self.events = Pattern.pattern(events)
         self.events = events
 
@@ -278,19 +293,15 @@ class Channel:
         else:
             event['key'] = Key(0, Scale.default)
 
-        #----------------------------------------------------------------------
         # this does the job of turning constant values into (PConst) patterns.
-        #----------------------------------------------------------------------
         for key, value in event.items():
             event[key] = Pattern.pattern(value)
 
         self.event = event
 
     def tick(self, time):
-        #----------------------------------------------------------------------
         # process noteOffs before we play the next note, else a repeated note
         # with gate = 1.0 will immediately be cancelled.
-        #----------------------------------------------------------------------
         self.processNoteOffs()
 
         try:
@@ -358,9 +369,7 @@ class Channel:
 
             return
 
-        '''
-        control: Send a control value
-        '''
+        # control: Send a control value
         if "control" in values:
             value = values["value"]
             channel = values["channel"]
@@ -375,16 +384,12 @@ class Channel:
                 values["channel"])
             return
 
-        '''
-		# address: Send a value to an OSC endpoint
-		'''
+        # address: Send a value to an OSC endpoint
         if "address" in values:
             self.device.send(values["address"], values["params"])
             return
 
-        '''
         # note/degree/etc: Send a MIDI note
-        '''
         note = None
 
         if "degree" in values:
@@ -412,30 +417,25 @@ class Channel:
             values["note"] = None
 
         if values["note"] is None:
-            # print "(rest)"
-            # return
             values["note"] = 0
             values["amp"] = 0
         else:
-            #------------------------------------------------------------------
             # handle lists of notes (eg chords).
-            # TODO: create a class which allows for scalars and arrays to handle
+            # TODO: create a class which allows for scalars and arrays to
+            # handle
             # addition transparently.
             #
             # the below does not allow for values["transpose"] to be an array,
             # for example.
-            #------------------------------------------------------------------
             try:
                 values["note"] = [note + values["transpose"]
                                   for note in values["note"]]
             except:
                 values["note"] += values["transpose"]
 
-        #----------------------------------------------------------------------
         # event: Certain devices (eg Socket IO) handle generic events,
         #        rather than noteOn/noteOff. (Should probably have to
-        #        register for this behaviour rather than happening magically...)
-        #----------------------------------------------------------------------
+        #        register for this behaviour rather than happening magically..)
         if hasattr(
                 self.device,
                 "event") and callable(
@@ -471,9 +471,7 @@ class Channel:
             self.device.event(d)
             return
 
-        #----------------------------------------------------------------------
         # noteOn: Standard (MIDI) type of device
-        #----------------------------------------------------------------------
         if values["amp"] > 0:
             # TODO: pythonic duck-typing approach might be better
             # TODO: doesn't handle arrays of amp, channel values, etc
@@ -482,11 +480,9 @@ class Channel:
                 '__iter__') else [
                 values["note"]]
 
-            #------------------------------------------------------------------
             # Allow for arrays of amp, gate etc, to handle chords properly.
             # Caveat: Things will go horribly wrong for an array of amp/gate values
             # shorter than the number of notes.
-            #------------------------------------------------------------------
             for index, note in enumerate(notes):
                 amp = values["amp"][index] if isinstance(
                     values["amp"],
@@ -526,14 +522,12 @@ class Channel:
                 self.device.noteOff(index, channel)
                 self.noteOffs.pop(n)
 
-#----------------------------------------------------------------------
 # a clock is relied upon to generate accurate tick() events every
 # fraction of a note. it should handle millisecond-level jitter
 # internally - ticks should always be sent out on time!
 #
 # period, in seconds, corresponds to a 24th crotchet (1/96th of a bar),
 # as per MIDI
-#----------------------------------------------------------------------
 
 
 class Clock:
