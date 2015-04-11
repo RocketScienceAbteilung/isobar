@@ -11,13 +11,13 @@ except:
 setup(
     name='isobar',
     version='0.0.2',
-    description='A Python library to express and manipulate musical patterns',
+    description='An isobar fork using mido library instead of python-rtmidi',
     long_description=long_description,
     author='Daniel Jones',
     author_email='dan-isobar@erase.net',
-    url='https://github.com/ideoforms/isobar',
+    url='https://github.com/faroit/isobar',
     packages=['isobar'],
-    install_requires=['pyOSC >= 0.3b0', 'python-rtmidi'],
+    install_requires=['pyOSC >= 0.3b0', 'mido'],
     keywords=('sound', 'music', 'composition'),
     classifiers=[
         'Topic :: Multimedia :: Sound/Audio',

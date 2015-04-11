@@ -9,16 +9,14 @@ from isobar.pattern import *
 
 import isobar.io
 
-TICKS_PER_BEAT = 24
-
 
 class Timeline(object):
     CLOCK_INTERNAL = 0
     CLOCK_EXTERNAL = 1
 
-    def __init__(self, bpm=120, device=None, debug=None):
+    def __init__(self, bpm=120, device=None, debug=None, ticks_per_beat=24):
         """expect to receive one tick per beat, generate events at 120bpm"""
-        self.ticklen = 1.0 / TICKS_PER_BEAT
+        self.ticklen = 1.0 / ticks_per_beat
         self.beats = 0
         self.devices = [device] if device else []
         self.channels = []
@@ -46,7 +44,7 @@ class Timeline(object):
             '''
             # Create clock with a tick-size of 1/24th of a beat.
             '''
-            self.clock = Clock(60.0 / (self.bpm * TICKS_PER_BEAT))
+            self.clock = Clock(60.0 / (self.bpm * ticks_per_beat))
             self.clockmode = self.CLOCK_INTERNAL
 
     def tick(self):
