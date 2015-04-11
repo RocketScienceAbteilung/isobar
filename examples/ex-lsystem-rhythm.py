@@ -18,12 +18,12 @@ import time
 #  - = transpose down one semitone
 #  [ = enter recursive branch
 #  ] = leave recursive branch
-notes = PLSys("N+[+N+N--N+N]+N[++N]", depth = 4)
+notes = PLSys("N+[+N+N--N+N]+N[++N]", depth=4)
 notes = notes + 60
 
 # use another l-system to generate time intervals.
 # take absolute values so that intervals are always positive.
-times = PLSys("[N+[NN]-N+N]+N-N+N", depth = 3)
+times = PLSys("[N+[NN]-N+N]+N-N+N", depth=3)
 times = PAbs(PDiff(times)) * 0.25
 # delay = PDelay(notes, times)
 
@@ -32,5 +32,5 @@ velocity = (PLSys("N+N[++N+N--N]-N[--N+N]") + PWhite(-4, 4)) * 8
 velocity = PAbs(velocity)
 
 timeline = Timeline(120)
-timeline.sched({ 'note' : notes, 'amp' : velocity, 'dur' : times })
+timeline.sched({'note': notes, 'amp': velocity, 'dur': times})
 timeline.run()

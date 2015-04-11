@@ -8,43 +8,44 @@ from isobar.note import *
 MIDIIN_DEFAULT = "IAC Driver A"
 MIDIOUT_DEFAULT = "IAC Driver A"
 
+
 class OSCOut:
-	""" OSCOut: Wraps MIDI messages in OSC.
-	/note [ note, velocity, channel ]
-	/control [ control, value, channel ] """
 
-	def __init__(self, host = "localhost", port = 7000):
-		self.osc = OSCClient()
-		self.osc.connect((host, port))
+    """ OSCOut: Wraps MIDI messages in OSC.
+    /note [ note, velocity, channel ]
+    /control [ control, value, channel ] """
 
-	def tick(self, ticklen):
-		pass
+    def __init__(self, host="localhost", port=7000):
+        self.osc = OSCClient()
+        self.osc.connect((host, port))
 
-	def noteOn(self, note = 60, velocity = 64, channel = 0):
-		msg = OSCMessage("/note")
-		msg.extend([ note, velocity, channel ])
-		self.osc.send(msg)
+    def tick(self, ticklen):
+        pass
 
-	def noteOff(self, note = 60, channel = 0):
-		msg = OSCMessage("/note")
-		msg.extend([ note, 0, channel ])
-		self.osc.send(msg)
+    def noteOn(self, note=60, velocity=64, channel=0):
+        msg = OSCMessage("/note")
+        msg.extend([note, velocity, channel])
+        self.osc.send(msg)
 
-	def allNotesOff(self, channel = 0):
-		for n in range(128):
-			self.noteOff(n, channel)
+    def noteOff(self, note=60, channel=0):
+        msg = OSCMessage("/note")
+        msg.extend([note, 0, channel])
+        self.osc.send(msg)
 
-	def control(self, control, value, channel = 0):
-		msg = OSCMessage("/control")
-		msg.extend([ control, value, channel ])
-		self.osc.send(msg)
+    def allNotesOff(self, channel=0):
+        for n in range(128):
+            self.noteOff(n, channel)
 
-	def __destroy__(self):
-		self.osc.close()
+    def control(self, control, value, channel=0):
+        msg = OSCMessage("/control")
+        msg.extend([control, value, channel])
+        self.osc.send(msg)
 
-	def send(self, address, params = None):
-		msg = OSCMessage(address)
-		msg.extend(params)
-		print "osc: %s (%s)" % (address, params)
-		self.osc.send(msg)
+    def __destroy__(self):
+        self.osc.close()
 
+    def send(self, address, params=None):
+        msg = OSCMessage(address)
+        msg.extend(params)
+        print "osc: %s (%s)" % (address, params)
+        self.osc.send(msg)

@@ -1,6 +1,6 @@
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # isobar: a python library for expressing and manipulating musical patterns.
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 import sys
 import copy
@@ -12,410 +12,430 @@ import isobar
 
 
 class Pattern:
-	""" Pattern: Abstract superclass of all pattern generators.
 
-		Patterns are at the core of isoar. A Pattern implements the iterator
-		protocol, representing a sequence of values which are iteratively
-		returned by the next() method. A pattern may be finite, after which
-		point it raises an EndOfPattern exception. Call reset() to return
-		a pattern to its initial state.
+    """ Pattern: Abstract superclass of all pattern generators.
 
-		Patterns can be subject to standard arithmetic operators as expected.
-		"""
+            Patterns are at the core of isoar. A Pattern implements the iterator
+            protocol, representing a sequence of values which are iteratively
+            returned by the next() method. A pattern may be finite, after which
+            point it raises an EndOfPattern exception. Call reset() to return
+            a pattern to its initial state.
 
-	LENGTH_MAX = 65536
-	GENO_SEPARATOR = "/"
+            Patterns can be subject to standard arithmetic operators as expected.
+            """
 
-	def __init__(self):
-		pass
+    LENGTH_MAX = 65536
+    GENO_SEPARATOR = "/"
 
-	def __str__(self):
-		return "pattern(%s)" % self.__class__
+    def __init__(self):
+        pass
 
-	def __len__(self):
-		# formerly defined as len(list(self)), but list(self) seeminly relies
-		# on a correct __len__ to function as expected.
-		items = self.all()
-		return len(items)
+    def __str__(self):
+        return "pattern(%s)" % self.__class__
 
-	def __neg__(self):
-		return 0 - self
+    def __len__(self):
+        # formerly defined as len(list(self)), but list(self) seeminly relies
+        # on a correct __len__ to function as expected.
+        items = self.all()
+        return len(items)
 
-	def __add__(self, operand):
-		"""Binary op: add two patterns"""
-		# operand = copy.deepcopy(operand) if isinstance(operand, pattern) else PConst(operand)
-		# return PAdd(copy.deepcopy(self), operand)
+    def __neg__(self):
+        return 0 - self
 
-		# we actually want to retain references to our constituent patterns
-		# in case the user later changes parameters of one
-		operand = Pattern.pattern(operand)
-		return PAdd(self, operand)
+    def __add__(self, operand):
+        """Binary op: add two patterns"""
+        # operand = copy.deepcopy(operand) if isinstance(operand, pattern) else PConst(operand)
+        # return PAdd(copy.deepcopy(self), operand)
 
-	def __radd__(self, operand):
-		"""Binary op: add two patterns"""
-		return self.__add__(operand)
+        # we actually want to retain references to our constituent patterns
+        # in case the user later changes parameters of one
+        operand = Pattern.pattern(operand)
+        return PAdd(self, operand)
 
-	def __sub__(self, operand):
-		"""Binary op: subtract two patterns"""
-		operand = Pattern.pattern(operand)
-		return PSub(self, operand)
+    def __radd__(self, operand):
+        """Binary op: add two patterns"""
+        return self.__add__(operand)
 
-	def __rsub__(self, operand):
-		"""Binary op: subtract two patterns"""
-		operand = Pattern.pattern(operand)
-		return PSub(operand, self)
+    def __sub__(self, operand):
+        """Binary op: subtract two patterns"""
+        operand = Pattern.pattern(operand)
+        return PSub(self, operand)
 
-	def __mul__(self, operand):
-		"""Binary op: multiply two patterns"""
-		operand = Pattern.pattern(operand)
-		return PMul(self, operand)
+    def __rsub__(self, operand):
+        """Binary op: subtract two patterns"""
+        operand = Pattern.pattern(operand)
+        return PSub(operand, self)
 
-	def __rmul__(self, operand):
-		"""Binary op: multiply two patterns"""
-		return self.__mul__(operand)
+    def __mul__(self, operand):
+        """Binary op: multiply two patterns"""
+        operand = Pattern.pattern(operand)
+        return PMul(self, operand)
 
-	def __div__(self, operand):
-		"""Binary op: divide two patterns"""
-		operand = Pattern.pattern(operand)
-		return PDiv(self, operand)
+    def __rmul__(self, operand):
+        """Binary op: multiply two patterns"""
+        return self.__mul__(operand)
 
-	def __rdiv__(self, operand):
-		"""Binary op: divide two patterns"""
-		return self.__div__(operand)
+    def __div__(self, operand):
+        """Binary op: divide two patterns"""
+        operand = Pattern.pattern(operand)
+        return PDiv(self, operand)
 
-	def __mod__(self, operand):
-		"""Modulo"""
-		operand = Pattern.pattern(operand)
-		return PMod(self, operand)
+    def __rdiv__(self, operand):
+        """Binary op: divide two patterns"""
+        return self.__div__(operand)
 
-	def __rmod__(self, operand):
-		"""Modulo (as operand)"""
-		operand = Pattern.pattern(operand)
-		return operand.__mod__(self)
+    def __mod__(self, operand):
+        """Modulo"""
+        operand = Pattern.pattern(operand)
+        return PMod(self, operand)
 
-	def __rpow__(self, operand):
-		"""Power (as operand)"""
-		operand = Pattern.pattern(operand)
-		return operand.__pow__(self)
+    def __rmod__(self, operand):
+        """Modulo (as operand)"""
+        operand = Pattern.pattern(operand)
+        return operand.__mod__(self)
 
-	def __pow__(self, operand):
-		"""Power"""
-		operand = Pattern.pattern(operand)
-		return PPow(self, operand)
+    def __rpow__(self, operand):
+        """Power (as operand)"""
+        operand = Pattern.pattern(operand)
+        return operand.__pow__(self)
 
-	def __lshift__(self, operand):
-		"""Left bitshift"""
-		operand = Pattern.pattern(operand)
-		return PLShift(self, operand)
+    def __pow__(self, operand):
+        """Power"""
+        operand = Pattern.pattern(operand)
+        return PPow(self, operand)
 
-	def __rshift__(self, operand):
-		"""Right bitshift"""
-		operand = Pattern.pattern(operand)
-		return PRShift(self, operand)
+    def __lshift__(self, operand):
+        """Left bitshift"""
+        operand = Pattern.pattern(operand)
+        return PLShift(self, operand)
 
-	def __iter__(self):
-		return self
+    def __rshift__(self, operand):
+        """Right bitshift"""
+        operand = Pattern.pattern(operand)
+        return PRShift(self, operand)
 
-	def nextn(self, count):
-		rv = []
-		# can't do a naive [ self.next() for n in range(count) ]
-		# as we want to catch StopIterations.
-		try:
-			for n in range(count):
-				rv.append(self.next())
-		except StopIteration:
-			pass
+    def __iter__(self):
+        return self
 
-		return rv
+    def nextn(self, count):
+        rv = []
+        # can't do a naive [ self.next() for n in range(count) ]
+        # as we want to catch StopIterations.
+        try:
+            for n in range(count):
+                rv.append(self.next())
+        except StopIteration:
+            pass
 
-	def next(self):
-		# default pattern should be void
-		raise StopIteration
+        return rv
 
-	def all(self):
-		values = []
-		try:
-			# do we even need a LENGTH_MAX?
-			# if we omit it, .all() will become an alias for list(pattern)
-			#  - maybe not such a bad thing.
-			for n in xrange(Pattern.LENGTH_MAX):
-				value = self.next()
-				values.append(value)
-		except StopIteration:
-			pass
+    def next(self):
+        # default pattern should be void
+        raise StopIteration
 
-		self.reset()
-		return values
+    def all(self):
+        values = []
+        try:
+            # do we even need a LENGTH_MAX?
+            # if we omit it, .all() will become an alias for list(pattern)
+            #  - maybe not such a bad thing.
+            for n in xrange(Pattern.LENGTH_MAX):
+                value = self.next()
+                values.append(value)
+        except StopIteration:
+            pass
 
-	def reset(self):
-		""" reset a finite sequence back to position 0 """
-		fields = vars(self)
-		for name, field in fields.items():
-			# print "reset: %s" % name
-			if isinstance(field, Pattern):
-				field.reset()
-			# look through list items and reset anything in here too
-			# (needed to reset items in PConcat)
-			elif isinstance(field, list):
-				for item in field:
-					if isinstance(item, Pattern):
-						item.reset()
-			elif isinstance(field, dict):
-				for item in field.values():
-					if isinstance(item, Pattern):
-						item.reset()
+        self.reset()
+        return values
 
-	def append(self, other):
-		return PConcat([ self, other ])
+    def reset(self):
+        """ reset a finite sequence back to position 0 """
+        fields = vars(self)
+        for name, field in fields.items():
+            # print "reset: %s" % name
+            if isinstance(field, Pattern):
+                field.reset()
+            # look through list items and reset anything in here too
+            # (needed to reset items in PConcat)
+            elif isinstance(field, list):
+                for item in field:
+                    if isinstance(item, Pattern):
+                        item.reset()
+            elif isinstance(field, dict):
+                for item in field.values():
+                    if isinstance(item, Pattern):
+                        item.reset()
 
-	@property
-	def timeline(self):
-		""" returns the timeline that i am embedded in, if any """
-		stack = inspect.stack()
-		for frame in stack:
-			frameobj = frame[0]
-			args, _, _, value_dict = inspect.getargvalues(frameobj)
-			if len(args) and args[0] == 'self':
-				instance = value_dict.get('self', None)
-				classname = instance.__class__.__name__
-				if classname == "Timeline":
-					return instance
+    def append(self, other):
+        return PConcat([self, other])
 
-	@staticmethod
-	def fromgenotype(genotype):
-		""" create a new object based on this genotype """
-		print "genotype: %s" % genotype
-		parts = genotype.split(Pattern.GENO_SEPARATOR)
-		classname = parts[0]
-		arguments = parts[1:]
-		try:
-			classes = vars(isobar)
-			classobj = classes[classname]
-			instance = classobj()
-			fields = vars(instance)
-			counter = 0
-			for name, field in fields.items():
-				instance.__dict__[name] = eval(arguments[counter])
-				print "%s - %s" % (name, arguments[counter])
-				counter += 1
-		except Exception, e:
-			print "fail: %s" % e
-			pass
+    @property
+    def timeline(self):
+        """ returns the timeline that i am embedded in, if any """
+        stack = inspect.stack()
+        for frame in stack:
+            frameobj = frame[0]
+            args, _, _, value_dict = inspect.getargvalues(frameobj)
+            if len(args) and args[0] == 'self':
+                instance = value_dict.get('self', None)
+                classname = instance.__class__.__name__
+                if classname == "Timeline":
+                    return instance
 
-		return instance
+    @staticmethod
+    def fromgenotype(genotype):
+        """ create a new object based on this genotype """
+        print "genotype: %s" % genotype
+        parts = genotype.split(Pattern.GENO_SEPARATOR)
+        classname = parts[0]
+        arguments = parts[1:]
+        try:
+            classes = vars(isobar)
+            classobj = classes[classname]
+            instance = classobj()
+            fields = vars(instance)
+            counter = 0
+            for name, field in fields.items():
+                instance.__dict__[name] = eval(arguments[counter])
+                print "%s - %s" % (name, arguments[counter])
+                counter += 1
+        except Exception as e:
+            print "fail: %s" % e
+            pass
 
-	def breedWith(self, other):
-		""" XXX: we should probably have a Genotype class that deals with all this """
+        return instance
 
-		genotypeA = self.genotype()
-		genotypeB = other.genotype()
-		genesA = genotypeA.split("/")[1:]
-		genesB = genotypeB.split("/")[1:]
-		genotype = [ genotypeA.split("/")[0] ]
-		for n in range(len(genesA)):
-			if random.uniform(0, 1) < 0.5:
-				genotype.append(genesA[n])
-			else:
-				genotype.append(genesB[n])
-		genotypeC = Pattern.GENO_SEPARATOR.join(genotype)
-		print "A %s\nB %s\n> %s" % (genotypeA, genotypeB, genotypeC)
-		return Pattern.fromgenotype(genotypeC)
+    def breedWith(self, other):
+        """ XXX: we should probably have a Genotype class that deals with all this """
 
-	def genotype(self):
-		""" return a string representation of this pattern, suitable for breeding """
-		genotype = "%s" % (self.__class__.__name__)
-		fields = vars(self)
+        genotypeA = self.genotype()
+        genotypeB = other.genotype()
+        genesA = genotypeA.split("/")[1:]
+        genesB = genotypeB.split("/")[1:]
+        genotype = [genotypeA.split("/")[0]]
+        for n in range(len(genesA)):
+            if random.uniform(0, 1) < 0.5:
+                genotype.append(genesA[n])
+            else:
+                genotype.append(genesB[n])
+        genotypeC = Pattern.GENO_SEPARATOR.join(genotype)
+        print "A %s\nB %s\n> %s" % (genotypeA, genotypeB, genotypeC)
+        return Pattern.fromgenotype(genotypeC)
 
-		import base64
+    def genotype(self):
+        """ return a string representation of this pattern, suitable for breeding """
+        genotype = "%s" % (self.__class__.__name__)
+        fields = vars(self)
 
-		for name, field in fields.items():
-			genotype += Pattern.GENO_SEPARATOR
+        import base64
 
-			if isinstance(field, Pattern):
-				genotype += "(%s)" % field.genotype()
-			elif isinstance(field, str):
-				genotype += base64.b64encode(field)
-			else:
-				genotype += str(field)
+        for name, field in fields.items():
+            genotype += Pattern.GENO_SEPARATOR
 
-		return genotype
+            if isinstance(field, Pattern):
+                genotype += "(%s)" % field.genotype()
+            elif isinstance(field, str):
+                genotype += base64.b64encode(field)
+            else:
+                genotype += str(field)
 
-	def copy(self):
-		return copy.deepcopy(self)
+        return genotype
 
-	@staticmethod
-	def value(v):
-		""" Resolve a pattern to its value (that is, the next item in this
-			pattern, recursively).
-			"""
-		return Pattern.value(v.next()) if isinstance(v, Pattern) else v
+    def copy(self):
+        return copy.deepcopy(self)
 
-	@staticmethod
-	def pattern(v):
-		""" Patternify a value by wrapping it in PConst if necessary. """
-		return v if isinstance(v, Pattern) else PConst(v)
+    @staticmethod
+    def value(v):
+        """ Resolve a pattern to its value (that is, the next item in this
+                pattern, recursively).
+                """
+        return Pattern.value(v.next()) if isinstance(v, Pattern) else v
+
+    @staticmethod
+    def pattern(v):
+        """ Patternify a value by wrapping it in PConst if necessary. """
+        return v if isinstance(v, Pattern) else PConst(v)
+
 
 class PConst(Pattern):
-	""" PConst: Pattern returning a fixed value
 
-		>>> p = PConst(4)
-		>>> p.nextn(16)
-		[4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
-		"""
-	def __init__(self, constant):
-		self.constant = constant
+    """ PConst: Pattern returning a fixed value
 
-	def __str__(self):
-		return "constant"
+            >>> p = PConst(4)
+            >>> p.nextn(16)
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+            """
 
-	def next(self):
-		return self.constant
+    def __init__(self, constant):
+        self.constant = constant
+
+    def __str__(self):
+        return "constant"
+
+    def next(self):
+        return self.constant
+
 
 class PRef(Pattern):
-	""" PRef: Pattern containing a reference to another pattern
-	    Returns the next value of the pattern contained.
-		Useful to change an inner pattern in real time.
-		"""
-	def __init__(self, pattern):
-		self.pattern = pattern
 
-	def change(self, pattern):
-		self.pattern = pattern
+    """ PRef: Pattern containing a reference to another pattern
+        Returns the next value of the pattern contained.
+            Useful to change an inner pattern in real time.
+            """
 
-	def next(self):
-		return self.pattern.next()
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def change(self, pattern):
+        self.pattern = pattern
+
+    def next(self):
+        return self.pattern.next()
+
 
 class PFunc(Pattern):
-	def __init__(self, fn):
-		self.fn = fn
 
-	def next(self):
-		fn = Pattern.value(self.fn)
-		return fn()
+    def __init__(self, fn):
+        self.fn = fn
+
+    def next(self):
+        fn = Pattern.value(self.fn)
+        return fn()
+
 
 class PDict(Pattern):
-	""" PDict: Dict of patterns
-        Thanks to Dan Stowell <http://www.mcld.co.uk/>
-	    """
-	def __init__(self, value = {}):
-		from isobar.pattern.sequence import PSeq
 
-		self.dict = {}
+    """ PDict: Dict of patterns
+    Thanks to Dan Stowell <http://www.mcld.co.uk/>
+        """
 
-		if type(value) == dict:
-			self.dict = value
-		elif type(value) == list:
-			self.dict = {}
-			try:
-				keys = value[0].keys()
-				for key in keys:
-					self.dict[key] = PSeq([ item[key] for item in value ], 1)
-			except IndexError:
-				pass
+    def __init__(self, value={}):
+        from isobar.pattern.sequence import PSeq
 
-	def __getitem__(self, key):
-		return self.dict[key]
+        self.dict = {}
 
-	def __setitem__(self, key, value):
-		self.dict[key] = value
+        if isinstance(value, dict):
+            self.dict = value
+        elif isinstance(value, list):
+            self.dict = {}
+            try:
+                keys = value[0].keys()
+                for key in keys:
+                    self.dict[key] = PSeq([item[key] for item in value], 1)
+            except IndexError:
+                pass
 
-	def __contains__(self, key):
-		return key in self.dict
+    def __getitem__(self, key):
+        return self.dict[key]
 
-	@classmethod
-	def load(self, filename):
-		from isobar.io.midifile import MidiFileIn
-		from isobar.pattern.sequence import PSeq
+    def __setitem__(self, key, value):
+        self.dict[key] = value
 
-		reader = MidiFileIn()
-		d = reader.read(filename)
-		d = dict([ (key, PSeq(value, 1)) for key, value in d.items() ])
-		return PDict(d)
+    def __contains__(self, key):
+        return key in self.dict
 
-	def has_key(self, key):
-		return key in self.dict
+    @classmethod
+    def load(self, filename):
+        from isobar.io.midifile import MidiFileIn
+        from isobar.pattern.sequence import PSeq
 
-	def setdefault(self, key, value):
-		if not key in self.dict:
-			self.dict[key] = value
+        reader = MidiFileIn()
+        d = reader.read(filename)
+        d = dict([(key, PSeq(value, 1)) for key, value in d.items()])
+        return PDict(d)
 
-	def keys(self):
-		return self.dict.keys()
+    def has_key(self, key):
+        return key in self.dict
 
-	def values(self):
-		return self.dict.values()
+    def setdefault(self, key, value):
+        if not key in self.dict:
+            self.dict[key] = value
 
-	def items(self):
-		return self.dict.items()
+    def keys(self):
+        return self.dict.keys()
 
-	def next(self):
-		vdict = Pattern.value(self.dict)
-		if not vdict:
-			raise StopIteration
+    def values(self):
+        return self.dict.values()
 
-		# for some reason, doing a list comprehension without the surrounding square
-		# brackets causes an inner StopIteration to be suppressed -- we want to
-		# explicitly raise it.
-		rv = dict([ (k, Pattern.value(vdict[k])) for k in vdict ])
+    def items(self):
+        return self.dict.items()
 
-		return rv
+    def next(self):
+        vdict = Pattern.value(self.dict)
+        if not vdict:
+            raise StopIteration
+
+        # for some reason, doing a list comprehension without the surrounding square
+        # brackets causes an inner StopIteration to be suppressed -- we want to
+        # explicitly raise it.
+        rv = dict([(k, Pattern.value(vdict[k])) for k in vdict])
+
+        return rv
+
 
 class PIndex(Pattern):
-	""" PIndex: Request a specified index from an array.
-	    """
-	def __init__(self, index, list):
-		self.index = index
-		self.list = list
 
-	def next(self):
-		index = Pattern.value(self.index)
-		list = Pattern.value(self.list)
+    """ PIndex: Request a specified index from an array.
+        """
 
-		#------------------------------------------------------------------
-		# null indices denote a rest -- so return a null value.
-		# (same behaviour as PDegree: a degree of None returns a rest.)
-		#------------------------------------------------------------------
-		if index is None:
-			return None
-		else:
-			index = int(index)
-			return list[index]
+    def __init__(self, index, list):
+        self.index = index
+        self.list = list
+
+    def next(self):
+        index = Pattern.value(self.index)
+        list = Pattern.value(self.list)
+
+        #------------------------------------------------------------------
+        # null indices denote a rest -- so return a null value.
+        # (same behaviour as PDegree: a degree of None returns a rest.)
+        #------------------------------------------------------------------
+        if index is None:
+            return None
+        else:
+            index = int(index)
+            return list[index]
+
 
 class PKey(Pattern):
-	""" PKey: Request a specified key from a dictionary.
-	    """
-	def __init__(self, key, dict):
-		self.key = key
-		self.dict = dict
 
-	def next(self):
-		vkey = Pattern.value(self.key)
-		vdict = Pattern.value(self.dict)
-		return vdict[vkey]
+    """ PKey: Request a specified key from a dictionary.
+        """
+
+    def __init__(self, key, dict):
+        self.key = key
+        self.dict = dict
+
+    def next(self):
+        vkey = Pattern.value(self.key)
+        vdict = Pattern.value(self.dict)
+        return vdict[vkey]
+
 
 class PConcat(Pattern):
-	""" PConcat: Concatenate the output of multiple sequences. 
 
-		>>> PConcat([ PSeq([ 1, 2, 3 ], 2), PSeq([ 9, 8, 7 ], 2) ]).nextn(16)
-		[1, 2, 3, 1, 2, 3, 9, 8, 7, 9, 8, 7]
-		"""
+    """ PConcat: Concatenate the output of multiple sequences.
 
-	def __init__(self, inputs):
-		self.inputs = inputs
-		self.current = self.inputs.pop(0)
+            >>> PConcat([ PSeq([ 1, 2, 3 ], 2), PSeq([ 9, 8, 7 ], 2) ]).nextn(16)
+            [1, 2, 3, 1, 2, 3, 9, 8, 7, 9, 8, 7]
+            """
 
-	def next(self):
-		try:
-			return self.current.next()
-		except StopIteration:
-			if len(self.inputs) > 0:
-				self.current = self.inputs.pop(0)
-				# can't just blindly return the first value of current
-				# -- what if it is empty? 
-				return self.next()
-			else:
-				# no more sequences left, so just return.
-				raise StopIteration
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.current = self.inputs.pop(0)
+
+    def next(self):
+        try:
+            return self.current.next()
+        except StopIteration:
+            if len(self.inputs) > 0:
+                self.current = self.inputs.pop(0)
+                # can't just blindly return the first value of current
+                # -- what if it is empty?
+                return self.next()
+            else:
+                # no more sequences left, so just return.
+                raise StopIteration
 
 
 #------------------------------------------------------------------
@@ -423,87 +443,111 @@ class PConcat(Pattern):
 #------------------------------------------------------------------
 
 class PBinOp(Pattern):
-	def __init__(self, a, b):
-		self.a = a
-		self.b = b
+
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
 
 class PAdd(PBinOp):
-	""" PAdd: Add elements of two patterns (shorthand: patternA + patternB) """
-	def __str__(self):
-		return "%s + %s" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a + b
-		
+    """ PAdd: Add elements of two patterns (shorthand: patternA + patternB) """
+
+    def __str__(self):
+        return "%s + %s" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a + b
+
 
 class PSub(PBinOp):
-	""" PSub: Subtract elements of two patterns (shorthand: patternA - patternB) """
-	def __str__(self):
-		return "%s - %s" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a - b
+    """ PSub: Subtract elements of two patterns (shorthand: patternA - patternB) """
+
+    def __str__(self):
+        return "%s - %s" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a - b
+
 
 class PMul(PBinOp):
-	""" PMul: Multiply elements of two patterns (shorthand: patternA * patternB) """
-	def __str__(self):
-		return "(%s) * (%s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a * b
+    """ PMul: Multiply elements of two patterns (shorthand: patternA * patternB) """
+
+    def __str__(self):
+        return "(%s) * (%s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a * b
+
 
 class PDiv(PBinOp):
-	""" PDiv: Divide elements of two patterns (shorthand: patternA / patternB) """
-	def __str__(self):
-		return "(%s) / (%s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a / b
+    """ PDiv: Divide elements of two patterns (shorthand: patternA / patternB) """
+
+    def __str__(self):
+        return "(%s) / (%s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a / b
+
 
 class PMod(PBinOp):
-	""" PMod: Modulo elements of two patterns (shorthand: patternA % patternB) """
-	def __str__(self):
-		return "(%s) %% (%s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a % b
+    """ PMod: Modulo elements of two patterns (shorthand: patternA % patternB) """
+
+    def __str__(self):
+        return "(%s) %% (%s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a % b
+
 
 class PPow(PBinOp):
-	""" PPow: One pattern to the power of another (shorthand: patternA ** patternB) """
-	def __str__(self):
-		return "pow(%s, %s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else pow(a, b)
+    """ PPow: One pattern to the power of another (shorthand: patternA ** patternB) """
+
+    def __str__(self):
+        return "pow(%s, %s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else pow(a, b)
+
 
 class PLShift(PBinOp):
-	""" PLShift: Binary left-shift (shorthand: patternA << patternB) """
-	def __str__(self):
-		return "(%s << %s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a << b
+    """ PLShift: Binary left-shift (shorthand: patternA << patternB) """
+
+    def __str__(self):
+        return "(%s << %s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a << b
+
 
 class PRShift(PBinOp):
-	""" PRShift: Binary right-shift (shorthand: patternA << patternB) """
-	def __str__(self):
-		return "(%s >> %s)" % (self.a, self.b)
 
-	def next(self):
-		a = self.a.next()
-		b = self.b.next()
-		return None if a is None or b is None else a >> b
+    """ PRShift: Binary right-shift (shorthand: patternA << patternB) """
+
+    def __str__(self):
+        return "(%s >> %s)" % (self.a, self.b)
+
+    def next(self):
+        a = self.a.next()
+        b = self.b.next()
+        return None if a is None or b is None else a >> b

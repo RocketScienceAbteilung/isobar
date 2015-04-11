@@ -10,7 +10,7 @@ from isobar.io.midi import *
 import random
 import time
 
-notes = PLSys("N[+N--?N]+N[+?N]", depth = 4) 
+notes = PLSys("N[+N--?N]+N[+?N]", depth=4)
 notes = PDegree(notes, Scale.majorPenta)
 notes = notes % 36 + 52
 
@@ -19,5 +19,5 @@ midi = MidiOut()
 timeline = Timeline(120)
 timeline.output(midi)
 
-timeline.sched({ 'note': notes, 'dur': 0.25 })
+timeline.sched({'note': notes, 'dur': 0.25})
 timeline.run()

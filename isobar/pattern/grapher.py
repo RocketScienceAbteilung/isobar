@@ -2,7 +2,9 @@ from gvgen import *
 from isobar.util import *
 import sys
 
+
 class Grapher:
+
     def graph(self, markov):
         gv = GvGen()
         items = []
@@ -17,7 +19,7 @@ class Grapher:
 
         # first pass: add nodes
         for n, node in enumerate(markov.nodes):
-            if type(node) == int:
+            if isinstance(node, int):
                 node = miditopitch(node)
             item = gv.newItem(str(node))
             items.append(item)
@@ -30,6 +32,5 @@ class Grapher:
                 link = gv.newLink(items[n], items[e], "%.1f" % edges[e])
                 gv.styleApply("edge", link)
                 # gv.propertyAppend(link, "weight", edges[e])
-
 
         gv.dot(sys.stderr)
