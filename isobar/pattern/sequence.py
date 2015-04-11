@@ -23,9 +23,7 @@ class PSeq(Pattern):
             """
 
     def __init__(self, list=[], repeats=sys.maxsize):
-        #----------------------------------------------------------------------
         # take a copy of the list to avoid changing the original
-        #----------------------------------------------------------------------
         assert hasattr(list, "__getitem__"), "PSeq must take a list argument"
         self.list = copy.copy(list)
         self.repeats = repeats
@@ -42,7 +40,6 @@ class PSeq(Pattern):
 
         # support for pattern arguments
         list = self.value(self.list)
-        repeats = self.value(self.repeats)
 
         rv = Pattern.value(list[self.pos])
         self.pos += 1
@@ -123,7 +120,8 @@ class PGeom(Pattern):
 
             >>> p = PGeom(1, 2)
             >>> p.nextn(16)
-            [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768]
+            [1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+             1024, 2048, 4096, 8192, 16384, 32768]
             """
 
     def __init__(self, start=1, multiply=2, length=sys.maxsize):
@@ -305,22 +303,16 @@ class PCreep(Pattern):
             repeat = random.uniform(0, 1) < prob
 
             if self.rcount >= count or not repeat:
-                #--------------------------------------------------------------
                 # finished creeping, pull some more data from our buffer
-                #--------------------------------------------------------------
                 for n in range(creep):
                     self.buffer.pop(0)
                     self.buffer.append(self.pattern.next())
                 self.rcount = 1
             else:
-                #--------------------------------------------------------------
                 # finished the Nth repeat but, still more repeats to do
-                #--------------------------------------------------------------
                 self.rcount += 1
 
-            #------------------------------------------------------------------
             # reset to the start of our buffer
-            #------------------------------------------------------------------
             if not repeat:
                 self.pos -= 1
             else:
@@ -604,14 +596,10 @@ class PArp(Pattern):
         self.offsets = []
 
         try:
-            #------------------------------------------------------------------
             # prefer to specify a chord (or Key)
-            #------------------------------------------------------------------
             self.notes = self.chord.semitones
         except:
-            #------------------------------------------------------------------
             # can alternatively specify a list of notes
-            #------------------------------------------------------------------
             self.notes = self.chord
 
         if type == PArp.UP:

@@ -404,12 +404,12 @@ class Channel:
                 except:
                     values["note"] = key[degree] + (octave * 12)
 
-        #----------------------------------------------------------------------
+        '''
         # For cases in which we want to introduce a rest, simply set our 'amp'
         # value to zero. This means that we can still send rest events to
         # devices which receive all generic events (useful to display rests
         # when rendering a score).
-        #----------------------------------------------------------------------
+        '''
         if random.uniform(0, 1) < values['omit']:
             values["note"] = None
 
