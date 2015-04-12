@@ -20,7 +20,7 @@ class Timeline(object):
         bpm=120,
         device=None,
         debug=None,
-        division=4,
+        division=1,
         ticks_per_beat=96
     ):
         """
@@ -270,10 +270,8 @@ class Channel:
             "dur"], self.dur_now, self.event["channel"], self.event["control"] if "control" in self.event else "-", self.count_now, self.count_max)
 
     def next(self):
-        #----------------------------------------------------------------------
         # event is a dictionary of patterns. anything which is not a pattern
         # (eg, constant values) are turned into PConsts.
-        #----------------------------------------------------------------------
         event = Pattern.value(self.events)
 
         event.setdefault('note', 60)
@@ -445,16 +443,18 @@ class Channel:
             d = copy.copy(values)
             for key, value in d.items():
                 '''
-                # turn non-builtin objects into their string representations.
-                # we don't want to call repr() on numbers as it turns them into strings,
-                # which we don't want to happen in our resultant JSON.
-                # TODO: there absolutely must be a way to do this for all objects which are
-                #       non-builtins... ie, who are "class" instances rather than "type".
-                #
-                #       we could check dir(__builtins__), but for some reason, __builtins__ is
-                #       different here than it is outside of a module!?
-                #
-                #       instead, go with the lame option of listing "primitive" types.
+                turn non-builtin objects into their string representations.
+                we don't want to call repr() on numbers as it turns
+                them into strings, which we don't want to happen in our
+                resultant JSON.
+                TODO: there absolutely must be a way to do this for all
+                      objects which are non-builtins... ie, who are "class"
+                      instances rather than "type".
+
+                      we could check dir(__builtins__), but for some reason,
+                      __builtins__ is different here than it is outside of a
+                      module!? instead, go with the lame option of listing
+                      "primitive" types.
                 '''
                 if type(value) not in (
                         int,
@@ -464,7 +464,6 @@ class Channel:
                         list,
                         dict,
                         tuple):
-                    name = type(value).__name__
                     value = repr(value)
                     d[key] = value
 
@@ -481,8 +480,9 @@ class Channel:
                 values["note"]]
 
             # Allow for arrays of amp, gate etc, to handle chords properly.
-            # Caveat: Things will go horribly wrong for an array of amp/gate values
-            # shorter than the number of notes.
+            # Caveat: Things will go horribly wrong for an array of amp/gate
+            # values shorter than the number of notes.
+
             for index, note in enumerate(notes):
                 amp = values["amp"][index] if isinstance(
                     values["amp"],
