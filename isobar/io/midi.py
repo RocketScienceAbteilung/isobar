@@ -25,21 +25,20 @@ class MidiIn:
         for name in ports:
             if name == target:
                 isobar.log("Found MIDI input (%s)", name)
-                self.midi = mido.open_input(name)
+                self.midi = mido.open_input(name, callback=self.callback)
 
         if self.midi is None:
             isobar.log("Could not find MIDI source %s, using default", target)
-            self.midi = mido.open_input()
+            self.midi = mido.open_input(callback=self.callback)
 
-    def callback(self, message, timestamp):
-        message = message[0]
-        data_type = message[0]
+    def callback(self, message):
+        print message
 
-        if data_type == 248:
+        if message.type "clock":
             if self.clocktarget is not None:
                 self.clocktarget.tick()
 
-        elif data_type == 250:
+        if message.type "start":
             # TODO: is this the right midi code?
             if self.clocktarget is not None:
                 self.clocktarget.reset_to_beat()
@@ -47,20 +46,19 @@ class MidiIn:
         # print "%d %d (%d)" % (data_type, data_note, data_vel)
 
     def run(self):
-        self.midi.set_callback(self.callback)
+        self.midi.callback = self.callback
 
     def poll(self):
         """ used in markov-learner -- can we refactor? """
-        message = self.midi.get_message()
+        message = self.midi.receive()
         if not message:
             return
 
         print message
-        data_type, data_note, data_vel = message[0]
 
-        if (data_type & 0x90) > 0 and data_vel > 0:
+        if (message.type & 0x90) > 0 and message.velocity > 0:
             # note on
-            return isobar.Note(data_note, data_vel)
+            return isobar.Note(message.note, message.velocity)
 
     def close(self):
         del self.midi
