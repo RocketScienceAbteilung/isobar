@@ -34,11 +34,11 @@ class MidiIn:
     def callback(self, message):
         print message
 
-        if message.type "clock":
+        if message.type is "clock":
             if self.clocktarget is not None:
                 self.clocktarget.tick()
 
-        if message.type "start":
+        if message.type is "start":
             # TODO: is this the right midi code?
             if self.clocktarget is not None:
                 self.clocktarget.reset_to_beat()

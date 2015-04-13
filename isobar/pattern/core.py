@@ -348,7 +348,7 @@ class PDict(Pattern):
         return key in self.dict
 
     def setdefault(self, key, value):
-        if not key in self.dict:
+        if key not in self.dict:
             self.dict[key] = value
 
     def keys(self):
