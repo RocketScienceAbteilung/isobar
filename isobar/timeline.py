@@ -192,16 +192,16 @@ class Timeline(object):
 
     def sched_mod(self, ch_idx, event, delay=0, quantize=16, device=None):
         '''
-        update channel events in realtime
+        modify channel events
         '''
 
-        def swap_events(ch_idx, event):
+        def swap_events(ch_idx, event, device):
             for key, value in event.items():
                 self.channels[ch_idx].events[key] = Pattern.pattern(value)
             if device:
                 self.channels[ch_idx].device = device
 
-        swap = functools.partial(swap_events, ch_idx, event)
+        swap = functools.partial(swap_events, ch_idx, event, device)
 
         if quantize or delay:
             if quantize:
@@ -213,7 +213,15 @@ class Timeline(object):
         else:
             swap()
 
-    def sched(self, event, quantize=0, delay=0, count=0, device=None):
+    def sched(
+        self,
+        event,
+        quantize=0,
+        delay=0,
+        count=0,
+        device=None,
+        name=None
+    ):
         if not device:
             if not self.devices:
                 isobar.log("Adding default MIDI output")
@@ -226,24 +234,24 @@ class Timeline(object):
         # hmm - why do we need to copy this?
         # c = channel(copy.deepcopy(dict))
         # c = Channel(copy.copy(dict))
-        def addchan():
+        def addchan(event, count, name):
             # this isn't exactly the best way to determine whether a device is
             # an automator or event generator. should we have separate calls?
             if isinstance(event, dict) and "control" in event and False:
                 pass
             else:
                 c = Channel(event, count)
+                c.name = name
+                print name
                 c.timeline = self
                 c.device = device
                 self.channels.append(c)
 
+        addchan = functools.partial(addchan, event, count, name)
+
         if quantize or delay:
             if quantize:
                 schedtime = self.beats + quantize - (self.beats % quantize) + delay
-                print schedtime
-                print self.beats
-                print delay
-                print quantize
             else:
                 schedtime = self.beats + delay
             self.events.append({'time': schedtime, 'fn': addchan})
@@ -282,6 +290,7 @@ class Channel:
         self.next()
 
         self.timeline = None
+        self.name = None
         self.pos = 0
         self.dur_now = 0
         self.phase_now = self.event["phase"].next()
