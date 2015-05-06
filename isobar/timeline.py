@@ -242,7 +242,6 @@ class Timeline(object):
             else:
                 c = Channel(event, count)
                 c.name = name
-                print name
                 c.timeline = self
                 c.device = device
                 self.channels.append(c)
