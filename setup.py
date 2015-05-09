@@ -10,7 +10,7 @@ except:
 
 setup(
     name='isobar',
-    version='0.0.3',
+    version='0.0.4',
     description='An isobar fork using mido library instead of python-rtmidi',
     long_description=long_description,
     author='Daniel Jones',

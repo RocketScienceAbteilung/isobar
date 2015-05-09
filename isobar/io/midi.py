@@ -106,8 +106,7 @@ class MidiOut:
     def allNotesOff(self, channel=0):
         if self.debug:
             print "[midi] channel %d, allNotesOff"
-        for n in range(128):
-            self.noteOff(n, channel)
+        self.midi.panic()
 
     def control(self, control=0, value=0, channel=0):
         print "*** [CTRL] channel %d, control %d: %d" % (channel, control, value)
